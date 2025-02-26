@@ -28,7 +28,7 @@ use crate::{Address, Error, Packet};
 /// The type of this associated data is chosen through `T`.
 #[repr(transparent)]
 pub struct Peer<T> {
-    inner: ENetPeer,
+    pub inner: ENetPeer,
 
     _data: PhantomData<T>,
 }
