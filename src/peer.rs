@@ -5,9 +5,9 @@ use std::{
 };
 
 use enet_sys::{
-    enet_peer_disconnect, enet_peer_disconnect_later, enet_peer_disconnect_now, enet_peer_receive,
-    enet_peer_reset, enet_peer_send, ENetPeer, _ENetPeerState,
-    _ENetPeerState_ENET_PEER_STATE_ACKNOWLEDGING_CONNECT,
+    enet_peer_disconnect, enet_peer_disconnect_later, enet_peer_disconnect_now,
+    enet_peer_ping_interval, enet_peer_receive, enet_peer_reset, enet_peer_send, enet_peer_timeout,
+    ENetPeer, _ENetPeerState, _ENetPeerState_ENET_PEER_STATE_ACKNOWLEDGING_CONNECT,
     _ENetPeerState_ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT,
     _ENetPeerState_ENET_PEER_STATE_CONNECTED, _ENetPeerState_ENET_PEER_STATE_CONNECTING,
     _ENetPeerState_ENET_PEER_STATE_CONNECTION_PENDING,
@@ -261,6 +261,39 @@ where
                 packet: Packet::from_sys_packet(res),
                 channel_id,
             })
+        }
+    }
+
+    /// Sets the timeout parameters for a peer
+    ///
+    /// The timeout parameter control how and when a peer will timeout from a failure to acknowledge reliable traffic.
+    /// Timeout values use an exponential backoff mechanism, where if a reliable packet is not acknowledge within some multiple of the average RTT plus a variance tolerance,
+    /// the timeout will be doubled until it reaches a set limit.
+    /// If the timeout is thus at this limit and reliable packets have been sent but not acknowledged within a certain minimum time period, the peer will be disconnected.
+    /// Alternatively, if reliable packets have been sent but not acknowledged for a certain maximum time period,
+    /// the peer will be disconnected regardless of the current timeout limit value.
+    pub fn set_ping_interval(&mut self, ping_interval: u32) {
+        unsafe {
+            enet_peer_ping_interval(&mut self.inner as *mut _, ping_interval);
+        }
+    }
+
+    /// Sets the timeout parameters for a peer
+    ///
+    /// The timeout parameter control how and when a peer will timeout from a failure to acknowledge reliable traffic.
+    /// Timeout values use an exponential backoff mechanism, where if a reliable packet is not acknowledge within some multiple of the average RTT plus a variance tolerance,
+    /// the timeout will be doubled until it reaches a set limit.
+    /// If the timeout is thus at this limit and reliable packets have been sent but not acknowledged within a certain minimum time period, the peer will be disconnected.
+    /// Alternatively, if reliable packets have been sent but not acknowledged for a certain maximum time period,
+    /// the peer will be disconnected regardless of the current timeout limit value.
+    pub fn set_timeout(&mut self, timeout_limit: u32, timeout_minimum: u32, timeout_maximum: u32) {
+        unsafe {
+            enet_peer_timeout(
+                &mut self.inner as *mut _,
+                timeout_limit,
+                timeout_minimum,
+                timeout_maximum,
+            );
         }
     }
 }
